@@ -12,7 +12,6 @@ using System.Text;
 using LoadBalancerIdentityServer.Models.Identity;
 using LoadBalancer.IdenityServer.Validators;
 using System.Reflection;
-using LoadBalancer.IdenityServer.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
