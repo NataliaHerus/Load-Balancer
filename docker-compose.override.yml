@@ -1,0 +1,27 @@
+version: '3.4'
+
+services:
+  loadbalancer.webapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - identityUrl=http://loadbalancer.idenityserver
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=LoadBalancer;User ID=Natalia;Password=P@ssword1;MultipleActiveResultSets=true;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;Application Name=LoadBalancerAPI
+    ports:
+      - "80"
+      - "443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  loadbalancer.idenityserver:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=LoadBalancer.IdenityServer;User ID=Natalia;Password=P@ssword1;MultipleActiveResultSets=true;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;Application Name=IdentityServer
+    ports:
+      - "80"
+      - "443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro

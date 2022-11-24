@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  loadbalancer.webapi:
+    image: ${DOCKER_REGISTRY-}loadbalancerwebapi
+    build:
+      context: .
+      dockerfile: LoadBalancer.WebApi\Dockerfile
+
+  loadbalancer.idenityserver:
+    image: ${DOCKER_REGISTRY-}loadbalanceridenityserver
+    build:
+      context: .
+      dockerfile: LoadBalancer.IdenityServer\Dockerfile
+
