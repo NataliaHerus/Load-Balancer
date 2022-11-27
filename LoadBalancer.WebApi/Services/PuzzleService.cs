@@ -7,23 +7,26 @@ using LoadBalancer.WebApi.Enums;
 using System.Diagnostics;
 using System.Security.Claims;
 using LoadBalancer.WebApi.Repositories.Interfaces;
+using LoadBalancer.WebApi.Data.Entities.UzerToPuzzleEntity;
 
 namespace LoadBalancer.WebApi.Services
 {
     public class PuzzleService : IPuzzleService
     {
         protected readonly IPuzzleRepository _puzzleRepository;
+        protected readonly IUserToPuzzleRepository _userToPuzzleRepository;
         protected readonly IStateRepository _stateRepository;
         protected readonly IMapper _mapper;
         protected readonly IHttpContextAccessor _httpContextAccessor;
 
         public PuzzleService(IPuzzleRepository accountRepository, IHttpContextAccessor httpContextAccessor,
-            IMapper mapper, IStateRepository stateRepository)
+            IMapper mapper, IStateRepository stateRepository, IUserToPuzzleRepository userToPuzzleRepository)
         {
             _httpContextAccessor = httpContextAccessor;
             _puzzleRepository = accountRepository;
             _stateRepository = stateRepository;
             _mapper = mapper;
+            _userToPuzzleRepository = userToPuzzleRepository;
         }
         private static double[,] GenerateSymmetricalMatrix(int n)
         {
@@ -62,8 +65,19 @@ namespace LoadBalancer.WebApi.Services
             }
             var puzzle = _mapper.Map<Puzzle>(dto);
             puzzle.State = await _stateRepository.GetByIdAsync((int)PuzzleState.InProgress);
-            //puzzle.UserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            puzzle.UserId = "testId";
+            puzzle.UserId = _httpContextAccessor.HttpContext.User.Identity.Name;
+
+            UserToPuzzle user = _userToPuzzleRepository.GetUserById(puzzle.UserId.ToString());
+            if (user == null)
+            {
+               user = new UserToPuzzle();
+               user.UserId = _httpContextAccessor.HttpContext.User.Identity.Name; 
+               user.MaxCount = 15;
+               await _userToPuzzleRepository.AddUserToPuzzleAsync(user);
+            }
+            user.MaxCount -= 1;
+            await _userToPuzzleRepository.UpdatePuzzleAsync(user);
+
             await _puzzleRepository.AddPuzzleAsync(puzzle);
 
             int size = puzzle.Dimension;
@@ -162,7 +176,7 @@ namespace LoadBalancer.WebApi.Services
             return _mapper.Map<PuzzleDto>(puzzle);
         }
 
-        public async Task<PuzzleDto> CompletePuzzleAsync(int id)
+        public async Task<PuzzleDto> CancelPuzzleAsync(int id)
         {
             var puzzle = _puzzleRepository.GetPuzzleById(id);
 

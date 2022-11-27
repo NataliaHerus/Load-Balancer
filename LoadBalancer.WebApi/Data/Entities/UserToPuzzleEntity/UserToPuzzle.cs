@@ -2,7 +2,7 @@
 
 namespace LoadBalancer.WebApi.Data.Entities.UzerToPuzzleEntity
 {
-    public class UzerToPuzzle
+    public class UserToPuzzle
     {
         public string UserId { get; set; }
         public int MaxCount { get; set; }

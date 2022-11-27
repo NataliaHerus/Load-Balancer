@@ -6,15 +6,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using System.Text;
-using LoadBalancerIdentityServer.Models.Identity;
-using LoadBalancer.IdenityServer.Validators;
-using System.Reflection;
+using Microsoft.IdentityModel.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
+IdentityModelEventSource.ShowPII = true;
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<IdenityServerDbContext>(options =>
@@ -22,7 +19,7 @@ builder.Services.AddDbContext<IdenityServerDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentity<User, IdentityRole>()
-    .AddEntityFrameworkStores<IdenityServerDbContext>();
+    .AddEntityFrameworkStores<IdenityServerDbContext>().AddDefaultTokenProviders();
 
 
 var applicationSettingsConfiguration = builder.Configuration.GetSection("ApplicationSettings");
@@ -48,7 +45,10 @@ builder.Services.AddAuthentication(x =>
              ValidateAudience = false
          };
      });
+builder.Services.AddAuthorization();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddCors();
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -58,18 +58,20 @@ if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
 }
-
 app.UseDeveloperExceptionPage();
 
 app.UseRouting();
 
 app.UseCors(options => options
+ .WithOrigins("http://localhost:4200/",
+              "https://localhost:5001")
               .AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader());
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHttpsRedirection();
 
 app.MapControllers();
 

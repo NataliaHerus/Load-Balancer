@@ -10,13 +10,13 @@ namespace LoadBalancer.WebApi.Data
     {
         public DbSet<Puzzle> Puzzles { get; set; }
         public DbSet<State> States { get; set; }
-        public DbSet<UzerToPuzzle> UserToPuzzle { get; set; }
+        public DbSet<UserToPuzzle> UserToPuzzle { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfiguration(new PuzzleConfiguration());
             modelBuilder.ApplyConfiguration(new StateConfiguration());
-            modelBuilder.ApplyConfiguration(new UzerToPuzzleConfuguration());
+            modelBuilder.ApplyConfiguration(new UserToPuzzleConfuguration());
 
             modelBuilder.Seed();
         }

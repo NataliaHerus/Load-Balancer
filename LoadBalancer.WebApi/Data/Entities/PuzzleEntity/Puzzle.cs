@@ -11,6 +11,6 @@ namespace LoadBalancer.WebApi.Data.Entities.PuzzleEntity
         public State? State { get; set; }  
         public int? StateId { get; set; }
         public string? UserId { get; set; }
-        public UzerToPuzzle? UserToPuzzle { get; set; }
+        public UserToPuzzle? UserToPuzzle { get; set; }
     }
 }

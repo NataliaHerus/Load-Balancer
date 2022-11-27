@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace LoadBalancer.WebApi.Data.Entities.UzerToPuzzleEntity
 {
-    public class UzerToPuzzleConfuguration : IEntityTypeConfiguration<UzerToPuzzle>
+    public class UserToPuzzleConfuguration : IEntityTypeConfiguration<UserToPuzzle>
     {
-        public void Configure(EntityTypeBuilder<UzerToPuzzle> builder)
+        public void Configure(EntityTypeBuilder<UserToPuzzle> builder)
         {
             builder
              .Property(x => x.UserId);

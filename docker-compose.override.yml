@@ -8,8 +8,8 @@ services:
       - identityUrl=http://loadbalancer.idenityserver
       - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=LoadBalancer;User ID=Natalia;Password=P@ssword1;MultipleActiveResultSets=true;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;Application Name=LoadBalancerAPI
     ports:
-      - "80"
-      - "443"
+      - "5000:80"
+      - "5001:443"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
@@ -20,8 +20,8 @@ services:
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=LoadBalancer.IdenityServer;User ID=Natalia;Password=P@ssword1;MultipleActiveResultSets=true;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;Application Name=IdentityServer
     ports:
-      - "80"
-      - "443"
+      - "5002:80"
+      - "5003:443"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro

@@ -1,9 +1,11 @@
 ﻿using LoadBalancer.WebApi.DTOs;
 using LoadBalancer.WebApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoadBalancer.WebApi.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PuzzleController : ControllerBase
@@ -33,7 +35,7 @@ namespace LoadBalancer.WebApi.Controllers
         [Route("cancel/{id}")]
         public async Task<IActionResult> Cancel([FromRoute] int id)
         {
-            return Ok(await _puzzleService.CompletePuzzleAsync(id));
+            return Ok(await _puzzleService.CancelPuzzleAsync(id));
         }
 
         [HttpGet]

@@ -10,33 +10,52 @@ using LoadBalancer.WebApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
+using Microsoft.IdentityModel.Logging;
+using System.Text;
+using LoadBalancer.IdenityServer;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+IdentityModelEventSource.ShowPII = true;
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<LoadBalancerDbContext>(options =>
     options.UseSqlServer(connectionString!));
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(opt =>
-    {
-        var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
 
-        opt.RequireHttpsMetadata = false;
-        opt.Authority = identityUrl;
-        opt.Audience = "LoadBalancerAPI";
-        opt.TokenValidationParameters = new TokenValidationParameters
-        {
-            // As issuer is HTTPS localhost, and authority is HTTP docker, but should be the same
-            ValidateIssuer = false,
-        };
-    });
+var applicationSettingsConfiguration = builder.Configuration.GetSection("ApplicationSettings");
+builder.Services.Configure<AppSettings>(applicationSettingsConfiguration);
+var appSettings = applicationSettingsConfiguration.Get<AppSettings>();
+var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+     .AddJwtBearer(x =>
+     {
+         x.RequireHttpsMetadata = false;
+         x.SaveToken = true;
+         x.TokenValidationParameters = new TokenValidationParameters
+         {
+             ValidateIssuerSigningKey = true,
+             IssuerSigningKey = new SymmetricSecurityKey(key),
+             ValidateIssuer = false,
+             ValidateAudience = false
+         };
+     });
+
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.Configure<IdentityOptions>(options =>
+    options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier);
+
 var mapperConfig = new MapperConfiguration(mc =>
 {
     mc.AddProfile(new AutoMapperProfile());
@@ -47,9 +66,11 @@ builder.Services.AddSingleton(mapper);
 
 builder.Services.AddScoped<IPuzzleRepository, PuzzleRepository>();
 builder.Services.AddScoped<IStateRepository, StateRepository>();
+builder.Services.AddScoped<IUserToPuzzleRepository, UserToPuzzleRepository>();
+
 
 builder.Services.AddScoped<IPuzzleService, PuzzleService>();
-builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
@@ -61,10 +82,18 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+};
+app.UseCors(
+            builder => builder
+                .WithOrigins(
+                    "http://localhost:4200",
+                    "https://localhost:5003")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
