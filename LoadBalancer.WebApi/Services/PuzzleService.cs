@@ -5,9 +5,10 @@ using LoadBalancer.WebApi.DTOs;
 using LoadBalancer.WebApi.Services.Interfaces;
 using LoadBalancer.WebApi.Enums;
 using System.Diagnostics;
-using System.Security.Claims;
 using LoadBalancer.WebApi.Repositories.Interfaces;
 using LoadBalancer.WebApi.Data.Entities.UzerToPuzzleEntity;
+using LoadBalancer.WebApi.Data;
+using LoadBalancer.WebApi.Data.Entities.ListenerEntity;
 
 namespace LoadBalancer.WebApi.Services
 {
@@ -18,15 +19,18 @@ namespace LoadBalancer.WebApi.Services
         protected readonly IStateRepository _stateRepository;
         protected readonly IMapper _mapper;
         protected readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly LoadBalancerDbContext _context;
 
         public PuzzleService(IPuzzleRepository accountRepository, IHttpContextAccessor httpContextAccessor,
-            IMapper mapper, IStateRepository stateRepository, IUserToPuzzleRepository userToPuzzleRepository)
+            IMapper mapper, IStateRepository stateRepository, IUserToPuzzleRepository userToPuzzleRepository
+            , LoadBalancerDbContext context)
         {
             _httpContextAccessor = httpContextAccessor;
             _puzzleRepository = accountRepository;
             _stateRepository = stateRepository;
             _mapper = mapper;
             _userToPuzzleRepository = userToPuzzleRepository;
+            _context = context;
         }
         private static double[,] GenerateSymmetricalMatrix(int n)
         {
@@ -57,8 +61,11 @@ namespace LoadBalancer.WebApi.Services
             }
             return roots;
         }
-        public async Task<PuzzleDto> CreatePuzzleAsync(PuzzleRequestDto dto)
+        public async Task<PuzzleDto> CreatePuzzleAsync(PuzzleRequestDto dto, int port)
         {
+            var listener = new Listener { Port = port, Load = dto.Dimension };
+            _context.Listeners.Add(listener);
+            _context.SaveChanges();
             if (dto.Dimension > 2000)
             {
                 throw new ArgumentException("Too big dimension");
@@ -161,6 +168,10 @@ namespace LoadBalancer.WebApi.Services
             puzzle.State = await _stateRepository.GetByIdAsync((int)PuzzleState.Completed);
             var newPuzzle = _mapper.Map(dto, puzzle);
             var completedPuzzle = await _puzzleRepository.UpdatePuzzleAsync(newPuzzle);
+
+            _context.Listeners.Remove(listener);
+            _context.SaveChanges();
+
             return _mapper.Map<PuzzleDto>(completedPuzzle);
         }
 

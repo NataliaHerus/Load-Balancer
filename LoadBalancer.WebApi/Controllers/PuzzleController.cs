@@ -18,12 +18,12 @@ namespace LoadBalancer.WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("create")]
-        public async Task<IActionResult> Create([FromBody] PuzzleRequestDto puzzle)
+        [Route("create/{port}")]
+        public async Task<IActionResult> Create([FromBody] PuzzleRequestDto puzzle, int port)
         {
             try
             {
-                return Ok(await _puzzleService.CreatePuzzleAsync(puzzle));
+                return Ok(await _puzzleService.CreatePuzzleAsync(puzzle, port));
             }
             catch(ArgumentException ex)
             {
